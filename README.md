@@ -23,6 +23,14 @@ These are things to think about when choosing a data structure for storing slice
 
 You may want your data to have the `'static` lifetime so that it'll be available anywhere within your program. This provides a lot of flexibility in how and where you can use the data but not a lot in how you can modify it.
 
+## Mutability
+
+There are a few levels of mutability for contiguous data in Rust:
+
+- Completely immutable
+- Fixed size, mutable contents
+- Mutable size and contents
+
 ## Extend vs. refuse
 
 When you run out of memory in your contiguous slice, should the data structure figure out a way to get more memory or should it refuse to give you more memory? If you want to intentionally use a capped amount of memory, it might be better to refuse to extend the memory. This could also be useful in embedded programming where you might not have access to an allocator to give you more memory.
@@ -48,6 +56,15 @@ fn main() {
 When you create an array in Rust, you need to specify the size at compile time.
 
 You can change the content, but there is no way to change the size.
+
+The following code won't compile because the type needs to be declared as `&[i8; 3]`, i.e. the size of the array needs to be known at compile time.
+
+```
+const MY_DATA: [i8] = [1, 2, 3];
+
+fn main() {
+}
+```
 
 ```rust
 fn main() {
@@ -111,5 +128,30 @@ fn main() {
     assert_eq!(array.try_push(2), Ok(()));
     assert!(array.try_push(3).is_err());
     assert_eq!(&array[..], &[1, 2]);
+}
+```
+
+# `tinyvec`
+
+`tinyvec` provides 100%-safe alternatives to both `arrayvec` and `smallvec`. It works pretty much the same way except that the types must implement `Default`.
+
+```rust
+use tinyvec::ArrayVec;
+
+fn main() {
+    let mut array = ArrayVec::<[_; 2]>::new();
+    array.push(1);
+    array.push(2);
+}
+```
+
+```rust,should_panic
+use tinyvec::ArrayVec;
+
+fn main() {
+    let mut array = ArrayVec::<[_; 2]>::new();
+    array.push(1);
+    array.push(2);
+    array.push(3);
 }
 ```
