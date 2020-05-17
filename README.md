@@ -14,3 +14,15 @@ Should include:
 - `smallvec`
 - `bytes`
 - `tinyvec`?
+
+# Tradeoffs
+
+These are things to think about when choosing a data structure for storing slice data.
+
+## Lifetime
+
+You may want your data to have the `'static` lifetime so that it'll be available anywhere within your program. This provides a lot of flexibility in how and where you can use the data but not a lot in how you can modify it.
+
+## Extend vs. refuse
+
+When you run out of memory in your contiguous slice, should the data structure figure out a way to get more memory or should it refuse to give you more memory? If you want to intentionally use a capped amount of memory, it might be better to refuse to extend the memory. This could also be useful in embedded programming where you might not have access to an allocator to give you more memory.
