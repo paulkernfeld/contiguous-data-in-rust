@@ -12,6 +12,7 @@ skeptic = "0.13"
 
 [dev-dependencies]
 arrayvec = "0.5"
+bytes = "0.5"
 skeptic = "0.13"
 smallvec = "1.4"
 tinyvec = "0.3"

@@ -5,15 +5,10 @@ This is an opinionated guide that explains commonly-used crates for storing slic
 A cool thing about Rust is that it's possible to write many different data structures that can store [slice data](https://doc.rust-lang.org/book/ch04-03-slices.html). (primitive type [slice](https://doc.rust-lang.org/std/primitive.slice.html))
 (`&[_]`).
 
-Should include:
+# TODO
 
-- `&[_]` (slice)
-- arrays
-- `Vec`
-- `arrayvec`
-- `smallvec`
-- `bytes`
-- `tinyvec`?
+- Investigate splitting further
+- Dive deeper into what `bytes` provides
 
 # Tradeoffs
 
@@ -91,6 +86,17 @@ fn main() {
 }
 ``` 
 
+We can split a `Vec` into two separate `Vec`s. However, doing this requires copyying the data. TODO: why is it that copying the data is required?
+
+```rust
+fn main() {
+    let mut just_one = vec![1, 2];
+    let just_two = just_one.split_off(1);
+    assert_eq!(&just_one, &[1]);
+    assert_eq!(&just_two, &[2]);
+}
+``` 
+
 ## `smallvec`
 
 The [`smallvec`](https://github.com/servo/rust-smallvec) provides an interface that is very close to Vec, but it will store small numbers of items on the stack instead of allocating on the heap. This is good if you suspect your data structure will normally be quite small but it may need to grow occasionally.
@@ -153,5 +159,29 @@ fn main() {
     array.push(1);
     array.push(2);
     array.push(3);
+}
+```
+
+## The bytes crate provides an efficient byte buffer structure 
+
+[bytes](https://docs.rs/bytes) provides `Bytes`, "an efficient container for storing and operating on contiguous slices of memory."
+
+```rust
+use bytes::{BytesMut, BufMut};
+
+fn main() {
+    let mut buf = BytesMut::with_capacity(1024);
+    buf.put(&b"hello world"[..]);
+    buf.put_u16(1234);
+    
+    let a: BytesMut = buf.split();
+    assert_eq!(a, b"hello world\x04\xD2"[..]);
+    
+    buf.put(&b"goodbye world"[..]);
+    
+    let b = buf.split();
+    assert_eq!(b, b"goodbye world"[..]);
+    
+    assert_eq!(buf.capacity(), 998);
 }
 ```
