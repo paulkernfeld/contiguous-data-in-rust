@@ -1,14 +1,16 @@
 # A Guide to Slice Data in Rust
 
-This is an opinionated guide that explains commonly-used crates for storing slice data in Rust. (contiguous data?). Following the form of [a guide to global data in Rust](https://github.com/paulkernfeld/global-data-in-rust).
+This is an opinionated guide that explains commonly-used crates and techniques for storing "slice data" in Rust. When I say slice data, I really mean contiguous data. Following the form of [a guide to global data in Rust](https://github.com/paulkernfeld/global-data-in-rust).
 
-A cool thing about Rust is that it's possible to write many different data structures that can store [slice data](https://doc.rust-lang.org/book/ch04-03-slices.html). (primitive type [slice](https://doc.rust-lang.org/std/primitive.slice.html))
-(`&[_]`).
+In Rust a "slice" is technically "a dynamically-sized view into a contiguous sequence" (primitive type [slice](https://doc.rust-lang.org/std/primitive.slice.html)). A cool thing about Rust is that it's possible to write your different data structures that can store [slice data](https://doc.rust-lang.org/book/ch04-03-slices.html). 
 
 # TODO
 
-- Investigate splitting further
-- Dive deeper into what `bytes` provides
+- `Box<[T]>`
+- Investigate splitting further:
+  - Vec copies, and why
+  - &[T] splitting, &mut [T], and T splitting
+- Dive deeper into what `bytes` provides: splitting and reference counting, Buf, BufMut
 
 # Tradeoffs
 
@@ -32,6 +34,25 @@ When you run out of memory in your contiguous slice, should the data structure f
 
 # Solutions
 
+The solutions are roughly in order of increasing power, according to the [Principle of Least Power](https://www.lihaoyi.com/post/StrategicScalaStylePrincipleofLeastPower.html#dependency-injection). So, consider using the first solution that will solve your problem.
+
+## Fixed-size array: `[T; N]`
+
+When you create a [fixed-size array](https://doc.rust-lang.org/std/primitive.array.html) in Rust, you must specify the size (`N`) at compile time.
+
+You can change the content, but there is no way to change the size.
+
+```rust
+const MY_DATA: [i8; 3] = [1, 2, 3];
+
+fn main() {
+    let mut my_data = [1; 3];
+    my_data[1] = 2;
+    my_data[2] = 3;
+    assert_eq!(MY_DATA, my_data);
+}
+```
+
 ## Slice literal
 
 This is a reference to data that is known at compile time and baked into the binary. Therefore the size and content of the slice must be known at compile time.
@@ -46,30 +67,9 @@ fn main() {
 }
 ```
 
-## Array literal
+## `Box<[T; N]>` (boxed array)
 
-When you create an array in Rust, you need to specify the size at compile time.
-
-You can change the content, but there is no way to change the size.
-
-The following code won't compile because the type needs to be declared as `&[i8; 3]`, i.e. the size of the array needs to be known at compile time.
-
-```
-const MY_DATA: [i8] = [1, 2, 3];
-
-fn main() {
-}
-```
-
-```rust
-fn main() {
-    {
-        let mut my_data = [1, 2, 3];
-        my_data[1] = 4;
-        assert_eq!(my_data[1], 4);
-    }
-}
-```
+TODO
 
 ## `std::vec::Vec`
 
@@ -86,7 +86,7 @@ fn main() {
 }
 ``` 
 
-We can split a `Vec` into two separate `Vec`s. However, doing this requires copyying the data. TODO: why is it that copying the data is required?
+We can split a `Vec` into two separate `Vec`s. However, doing this requires copyying the data. TODO: why is it that copying the data is required? ANSWER HERE: https://users.rust-lang.org/t/split-owned-vec-t-without-reallocation/6346/2
 
 ```rust
 fn main() {
