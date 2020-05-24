@@ -213,24 +213,23 @@ fn main() {
 
 ## The bytes crate provides an efficient byte buffer structure 
 
-[bytes](https://docs.rs/bytes) provides `Bytes`, "an efficient container for storing and operating on contiguous slices of memory."
+[bytes](https://docs.rs/bytes) provides `Bytes`, "an efficient container for storing and operating on contiguous slices of memory." One of its signature features is that, unlike `Vec`, it allows you to split ownership of data without copying.
 
 ```rust
 use bytes::{BytesMut, BufMut};
 
 fn main() {
-    let mut buf = BytesMut::with_capacity(1024);
-    buf.put(&b"hello world"[..]);
-    buf.put_u16(1234);
+    let mut left = BytesMut::with_capacity(1024);
+    left.put(&[1u8, 2, 3, 4] as &[u8]);
     
-    let a: BytesMut = buf.split();
-    assert_eq!(a, b"hello world\x04\xD2"[..]);
+    let mut right = left.split_off(2);
     
-    buf.put(&b"goodbye world"[..]);
+    std::thread::spawn(move || {
+        right[1] = 6;
+        assert_eq!(&right[..], [3, 6]);
+    });
     
-    let b = buf.split();
-    assert_eq!(b, b"goodbye world"[..]);
-    
-    assert_eq!(buf.capacity(), 998);
+    left[0] = 5;
+    assert_eq!(&left[..], [5, 2]);
 }
 ```
