@@ -6,9 +6,6 @@ In Rust a "slice" is technically "a dynamically-sized view into a contiguous seq
 
 # TODO
 
-- Investigate splitting further:
-  - Vec copies, and why
-  - &[T] splitting, &mut [T], and T splitting
 - Dive deeper into what `bytes` provides: splitting and reference counting, Buf, BufMut
 
 # Tradeoffs
@@ -136,14 +133,16 @@ fn main() {
 }
 ``` 
 
-We can split a `Vec` into two separate `Vec`s. However, doing this requires copyying the data. TODO: why is it that copying the data is required? ANSWER HERE: https://users.rust-lang.org/t/split-owned-vec-t-without-reallocation/6346/2
+We can split a `Vec` into two separate `Vec`s. However, doing this (surprisingly?) requires copying the data. [According to user hanna-kruppe on the Rustlang forum,](https://users.rust-lang.org/t/split-owned-vec-t-without-reallocation/6346/2):
+
+> But as far as I know, there’s currently no way to tell the allocator “Hey I got this piece of memory from you, now please pretend you gave it to me as two separate, contiguous allocations”
 
 ```rust
 fn main() {
-    let mut just_one = vec![1, 2];
-    let just_two = just_one.split_off(1);
-    assert_eq!(&just_one, &[1]);
-    assert_eq!(&just_two, &[2]);
+    let mut left = vec![1, 2, 3, 4];
+    let right = left.split_off(2);
+    assert_eq!(&left, &[1, 2]);
+    assert_eq!(&right, &[3, 4]);
 }
 ``` 
 
