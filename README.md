@@ -6,7 +6,6 @@ In Rust a "slice" is technically "a dynamically-sized view into a contiguous seq
 
 # TODO
 
-- `Box<[T]>`
 - Investigate splitting further:
   - Vec copies, and why
   - &[T] splitting, &mut [T], and T splitting
@@ -31,6 +30,35 @@ There are a few levels of mutability for contiguous data in Rust:
 ## Extend vs. refuse
 
 When you run out of memory in your contiguous slice, should the data structure figure out a way to get more memory or should it refuse to give you more memory? If you want to intentionally use a capped amount of memory, it might be better to refuse to extend the memory. This could also be useful in embedded programming where you might not have access to an allocator to give you more memory.
+
+## Splitting
+
+There are several ways that you can split contiguous data in Rust:
+
+1. You can always create as many overlapping shared slices (`&[T]`) as you want. The restriction is that you can't mutate them, and they have a restricted lifetime. TODO: demonstrate lifetime restrictions?
+
+```rust
+const MY_DATA: [i8; 3] = [2; 3];
+
+fn main() {
+    // Compare two overlapping slices
+    assert_eq!(&MY_DATA[..2], &MY_DATA[1..]);
+}
+```
+
+2. You can often divide a data structure into multiple non-overlapping mutable slices.
+
+```rust
+fn main() {
+    let my_data = &mut [1, 2, 3, 4];
+    let (left, right) = my_data.split_at_mut(2);
+    left[0] = 5;
+    right[1] = 6;
+    assert_eq!(my_data, &[5, 2, 3, 6]);
+}
+```
+
+3. It is less common to be able to divide the ownership of a contiguous block of data. See the `bytes` crate for a way to do this.
 
 # Solutions
 
