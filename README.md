@@ -67,9 +67,31 @@ fn main() {
 }
 ```
 
-## `Box<[T; N]>` (boxed array)
+## Boxed array: `Box<[T; N]>`
 
-TODO
+With a boxed array, you can create arrays at run time without knowing the size in advance. In most cases, you could probably just use `Vec` instead. However, boxed arrays could be a useful primitive for building your own custom buffer types. It should also save a bit of space relative to a `Vec`.
+
+The code below won't compile because you can't collect into a fixed-size array.
+
+```
+fn main() {
+    let my_data: [i8; 3] = [1, 2, 3].iter().cloned().collect();
+}
+```
+
+...but you can collect into a boxed array:
+
+```rust
+const MY_DATA: [i8; 3] = [1, 2, 3];
+
+
+fn main() {
+    let my_data: Box<[i8]> = MY_DATA.iter().cloned().collect();
+
+    // We need to take a slice b/c we can't compare boxed and fixed-size arrays directly
+    assert_eq!(&my_data[..], MY_DATA);
+}
+```
 
 ## `std::vec::Vec`
 
