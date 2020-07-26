@@ -4,11 +4,11 @@ This is an opinionated guide that explains commonly-used crates and techniques f
 
 # TODO
 
-- [`std::collections::VecDeque`](https://doc.rust-lang.org/std/collections/vec_deque/struct.VecDeque.html)
 - Would you ever want to use a boxed array (`Box<[T; N]>`)?
 - https://crates.io/crates/set_slice ?
 - https://crates.io/crates/fixed-slice-vec ?
 - If you use a custom allocator, is that still "the heap?"
+- If a C FFI function gives you owned data, can you clean up the memory? `soruh_c10` says you'd need to `Box::leak` and then call a C destructor.
 
 # Tradeoffs
 
@@ -127,7 +127,8 @@ A slice can refer to memory anywhere. It's possible to make a `const` slice that
 With a boxed alice, you can create arrays at run time without knowing the size at compile time. In most cases, you could probably just use `Vec` instead. However, boxed slices do have a few use cases:
 
 - Writing a custom buffer (e.g. [`std::io::BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html))
-- If you want to store data slightly more efficiently than a `Vec`
+- If you want to store data slightly more efficiently than a `Vec` (a boxed slice doesn't store a capacity)
+- If you generally want to prevent users from resizing the data
 
 The code below won't compile; you can't collect an iterator into a fixed-size array because the number of elements in an iterator isn't generally known at compile time.
 
@@ -242,6 +243,27 @@ fn main() {
 }
 ```
 
+## `VecDeque`
+
+[`std::collections::VecDeque`](https://doc.rust-lang.org/std/collections/vec_deque/struct.VecDeque.html) is "a double-ended queue implemented with a growable ring buffer." It's pretty similar to a `Vec` except that it can efficiently push and pop from both front and back. This means that `VecDeque` can be used as a queue or as a double-ended queue. See [`std::collections` docs](https://doc.rust-lang.org/stable/std/collections/index.html) for more details.
+
+```rust
+use std::collections::VecDeque;
+
+fn main() {
+    let mut vec_deque = VecDeque::with_capacity(3);
+    vec_deque.push_back(0);
+    vec_deque.push_back(2);
+    vec_deque.push_back(3);
+    assert_eq!(Some(0), vec_deque.pop_front());
+    vec_deque.push_front(1);
+
+    assert_eq!(&vec_deque, &[1, 2, 3]);
+}
+```
+
+Like a `Vec`, the `VecDeque` data lives on the heap.
+
 ## The `bytes` crate 
 
 [bytes](https://docs.rs/bytes) provides `Bytes`, "an efficient container for storing and operating on contiguous slices of memory." One of its signature features is that, unlike `Vec`, it allows you to split ownership of data without copying. Unlike the other tools in this guide, the `bytes` crate can't store types `T`.
@@ -254,7 +276,7 @@ fn main() {
     whole.put(&[1u8, 2, 3, 4] as &[u8]);
     
     let mut right = whole.split_off(2);
-    let left = whole;
+    let mut left = whole;
     
     std::thread::spawn(move || {
         right[1] = 6;
