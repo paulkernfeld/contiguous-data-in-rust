@@ -4,9 +4,12 @@ This is an opinionated guide that explains commonly-used crates and techniques f
 
 # TODO
 
-- Would you ever want to use a boxed array (`Box<[T; N]>`)?
-- https://crates.io/crates/set_slice ?
-- https://crates.io/crates/fixed-slice-vec ?
+- Link to readings from TRPL and std docs.
+- Would you ever want to use a boxed array (`Box<[T; N]>`)? See `WasmFile` from the `object` crate.
+- Find more crates
+- https://lib.rs/crates/collect_slice
+- Mention https://crates.io/crates/slice-deque
+- Check out https://crates.io/crates/tendril
 - If you use a custom allocator, is that still "the heap?"
 - If a C FFI function gives you owned data, can you clean up the memory? `soruh_c10` says you'd need to `Box::leak` and then call a C destructor.
 
