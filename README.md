@@ -1,11 +1,11 @@
 # A Guide to Slice Data in Rust
 
-This is an opinionated guide that explains commonly-used crates and techniques for storing "slice data" in Rust. When I say slice data, I really mean contiguous data. Following the form of [a guide to global data in Rust](https://github.com/paulkernfeld/global-data-in-rust).
+This is an opinionated guide that tries to help you choose the best way to store slice data (I really mean contiguous data) in Rust. It covers tools from Rust's core and standard library as well as third-party crates that meet more specific needs.
 
 # TODO
 
-- Link to readings from TRPL and std docs.
 - Would you ever want to use a boxed array (`Box<[T; N]>`)? See `WasmFile` from the `object` crate.
+- See https://users.rust-lang.org/t/when-is-it-morally-correct-to-use-smallvec/46375
 - Find more crates
 - https://lib.rs/crates/collect_slice
 - Mention https://crates.io/crates/slice-deque
@@ -26,8 +26,8 @@ You may want your data to have the `'static` lifetime so that it'll be available
 There are a few broad levels of mutability for contiguous data in Rust:
 
 - Completely immutable
-- Fixed size, mutable contents
-- Mutable size and contents
+- Fixed length, mutable contents
+- Mutable length and contents
 
 # Allocation
 
@@ -93,13 +93,24 @@ fn main() {
 }
 ```
 
-Because the size is known at compile time, a fixed-size array can be stored anywhere, even to be used as a `const`.
+Because the size is known at compile time, a fixed-size array can be stored anywhere, even to be used as a `const`. The size of the array is actually part of its type. This means that the following code, for example, won't compile:
 
-TODO: write about how you can't compare two arrays of different sizes.
+```
+const MY_DATA_3: [i8; 3] = [1, 2, 3];
+const MY_DATA_4: [i8; 4] = [1, 2, 3, 4];
+
+fn main() {
+    assert_eq!(MY_DATA_3, MY_DATA_4);
+}
+```
+
+An array cannot be split.
+
+See also [Array types](https://doc.rust-lang.org/reference/types/array.html) from The Rust Reference.
 
 ## Slice: `&[T]` or `&mut [T]`
 
-In Rust, a slice is "a dynamically-sized view into a contiguous sequence" (primitive type [slice](https://doc.rust-lang.org/std/primitive.slice.html), [TRPL on slice data](https://doc.rust-lang.org/book/ch04-03-slices.html)). In contrast to a fixed-size array, the size of a slice isn't known at compile time.
+In Rust, a [slice](https://doc.rust-lang.org/std/primitive.slice.html) is "a dynamically-sized view into a contiguous sequence." In contrast to a fixed-size array, the size of a slice isn't known at compile time.
 
 Given a mutable slice, you can change the content, but there is no way to change the size. When we take a mutable slice to an array, we're actually modifying the data in the array itself. That's why `my_array` needs to be declared as `mut` below.
 
@@ -118,16 +129,18 @@ Note that the following code would not compile if `my_slice` were an array, i.e.
 const MY_SLICE: &[i8] = &[1, 2, 3];
 
 fn main() {
-    let my_array: [i8; 4] = [1, 2, 3, 4];
-    assert_ne!(MY_SLICE, &my_array);
+    let my_slice: &[i8] = &[1, 2, 3, 4];
+    assert_ne!(MY_SLICE, my_slice);
 }
 ```
 
 A slice can refer to memory anywhere. It's possible to make a `const` slice that refers to data stored in the data segment of your program.
 
+See also [TRPL on slice data](https://doc.rust-lang.org/book/ch04-03-slices.html).
+
 ## Boxed slice: `Box<[T]>`
 
-With a boxed alice, you can create arrays at run time without knowing the size at compile time. In most cases, you could probably just use `Vec` instead. However, boxed slices do have a few use cases:
+With a boxed slice, you can create arrays at run time without knowing the size at compile time. In most cases, you could probably just use `Vec` instead. However, boxed slices do have a few use cases:
 
 - Writing a custom buffer (e.g. [`std::io::BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html))
 - If you want to store data slightly more efficiently than a `Vec` (a boxed slice doesn't store a capacity)
@@ -178,6 +191,9 @@ Because the size is dynamic and not known at compile time, the data for a `Vec` 
 We can split a `Vec` into two separate `Vec`s using the `split_off` method. However, doing this (surprisingly?) copies the data. [According to user hanna-kruppe on the Rustlang forum,](https://users.rust-lang.org/t/split-owned-vec-t-without-reallocation/6346/2):
 
 > But as far as I know, there’s currently no way to tell the allocator “Hey I got this piece of memory from you, now please pretend you gave it to me as two separate, contiguous allocations”
+
+See also [Storing Lists of Values with Vectors](Storing Lists of Values with Vectors) from _The Rust Programming Language_.
+
 
 ## `smallvec`
 
@@ -292,3 +308,8 @@ fn main() {
 ```
 
 The data for the `bytes` data structures will live on the heap.
+
+# More Resources
+
+- [Arrays and Slices](https://doc.rust-lang.org/stable/rust-by-example/primitives/array.html) from _Rust By Example_
+- [Slice types](https://doc.rust-lang.org/reference/types/slice.html) from The Rust Reference
