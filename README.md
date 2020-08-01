@@ -39,38 +39,7 @@ When you run out of memory in your contiguous slice, should the data structure f
 
 ## Splitting
 
-There are several ways that you can split contiguous data in Rust. Reviewing [References and Borrowing](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) from TRPL might be helpful to understanding this better.
-
-### Splitting with shared references
-
-You can always create as many overlapping shared slices (`&[T]`) as you want. The restriction is that you can't mutate them.
-
-```rust
-const MY_DATA: [i8; 3] = [2; 3];
-
-fn main() {
-    // Compare two overlapping slices
-    assert_eq!(&MY_DATA[..2], &MY_DATA[1..]);
-}
-```
-
-### Splitting with mutable references
-
-You can often divide a data structure into multiple non-overlapping mutable slices.
-
-```rust
-fn main() {
-    let my_data = &mut [0, 2, 3, 0];
-    let (left, right) = my_data.split_at_mut(2);
-    left[0] = 1;
-    right[1] = 4;
-    assert_eq!(my_data, &[1, 2, 3, 4]);
-}
-```
-
-### Splitting with owned data
-
-It is less common to be able to divide the ownership of a contiguous block of data. See the `bytes` crate for a way to do this.
+There are several ways that you can split contiguous data in Rust. Reviewing [References and Borrowing](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) from TRPL might be helpful to understanding this better. Since any contiguous data can be turned into a slice, the slice splitting rules can be used. The `bytes` crate provides an interesting way to split owned data. 
 
 # Solutions
 
@@ -93,7 +62,7 @@ fn main() {
 }
 ```
 
-Because the size is known at compile time, a fixed-size array can be stored anywhere, even to be used as a `const`. The size of the array is actually part of its type. This means that the following code, for example, won't compile:
+Because the size is known at compile time, a fixed-size array can be stored anywhere, even to be used as a `const`. The size of the array is actually part of its type. This means that the following code, for example, won't compile because you can't compare two variables with different types:
 
 ```
 const MY_DATA_3: [i8; 3] = [1, 2, 3];
@@ -110,9 +79,9 @@ See also [Array types](https://doc.rust-lang.org/reference/types/array.html) fro
 
 ## Slice: `&[T]` or `&mut [T]`
 
-In Rust, a [slice](https://doc.rust-lang.org/std/primitive.slice.html) is "a dynamically-sized view into a contiguous sequence." In contrast to a fixed-size array, the size of a slice isn't known at compile time.
+In Rust, a [slice](https://doc.rust-lang.org/std/primitive.slice.html) is "a dynamically-sized view into a contiguous sequence." In contrast to an array, the length of a slice isn't known at compile time.
 
-Given a mutable slice, you can change the content, but there is no way to change the size. When we take a mutable slice to an array, we're actually modifying the data in the array itself. That's why `my_array` needs to be declared as `mut` below.
+Given a mutable slice, you can change the content, but there is no way to change the length. When we take a mutable slice to an array, we're actually modifying the data in the array itself. That's why `my_array` needs to be declared as `mut` below.
 
 ```rust
 fn main() {
@@ -123,7 +92,7 @@ fn main() {
 }
 ```
 
-Note that the following code would not compile if `my_slice` were an array, i.e. with type `&[i8; 3]`; in that case, the compiler would say: ``can't compare `[i8; 3]` with `[i8; 4]``. However, the compiler is happy to let us compare slices of two different sizes. In this case the compiler will cast `my_array` from type `&[i8; 4]` to `&[i8]` to do the equality check.
+Unlike with an an array, two slices of different lengths _are_ the same type, so the code below works:
 
 ```rust
 const MY_SLICE: &[i8] = &[1, 2, 3];
@@ -136,11 +105,34 @@ fn main() {
 
 A slice can refer to memory anywhere. It's possible to make a `const` slice that refers to data stored in the data segment of your program.
 
+You can always create as many overlapping shared slices (`&[T]`) as you want, although you can't mutate them:
+
+```rust
+const MY_DATA: [i8; 3] = [2; 3];
+
+fn main() {
+    // Compare two overlapping slices
+    assert_eq!(&MY_DATA[..2], &MY_DATA[1..]);
+}
+```
+
+You can split a mutable slice into multiple non-overlapping mutable slices:
+
+```rust
+fn main() {
+    let my_data = &mut [0, 2, 3, 0];
+    let (left, right) = my_data.split_at_mut(2);
+    left[0] = 1;
+    right[1] = 4;
+    assert_eq!(my_data, &[1, 2, 3, 4]);
+}
+```
+
 See also [TRPL on slice data](https://doc.rust-lang.org/book/ch04-03-slices.html).
 
 ## Boxed slice: `Box<[T]>`
 
-With a boxed slice, you can create arrays at run time without knowing the size at compile time. In most cases, you could probably just use `Vec` instead. However, boxed slices do have a few use cases:
+With a boxed slice, you can create arrays at run time without knowing the length at compile time. In most cases, you could probably just use `Vec` instead. However, boxed slices do have a few use cases:
 
 - Writing a custom buffer (e.g. [`std::io::BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html))
 - If you want to store data slightly more efficiently than a `Vec` (a boxed slice doesn't store a capacity)
@@ -163,16 +155,16 @@ const MY_DATA: [i8; 3] = [1, 2, 3];
 fn main() {
     let my_data: Box<[i8]> = MY_DATA.iter().cloned().collect();
 
-    // We need to take a slice b/c we can't compare boxed slices and fixed-size arrays directly
+    // We need to take a slice b/c we can't compare boxed slices and arrays directly
     assert_eq!(&my_data[..], MY_DATA);
 }
 ```
 
-Because the size isn't known at compile time, a boxed slice can _only_ live on the heap.
+Because the length isn't known at compile time, a boxed slice can _only_ be allocated with an allocator; it can't live on the stack.
 
 ## `Vec`
 
-[`std::vec::Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html) is the `std` way to do variable-length contiguous data. Both the content and size can be changed. When you try to add data and there's not enough room, the data structure will allocate more memory for the data.
+[`std::vec::Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html) is the `std` way to do variable-length contiguous data. When you try to add data and there's not enough room, the data structure will allocate more memory for the data.
 
 ```rust
 fn main() {
@@ -186,7 +178,7 @@ fn main() {
 }
 ``` 
 
-Because the size is dynamic and not known at compile time, the data for a `Vec` can only live on the heap.
+Because the length is dynamic and not known at compile time, the data for a `Vec` can only live on the heap.
 
 We can split a `Vec` into two separate `Vec`s using the `split_off` method. However, doing this (surprisingly?) copies the data. [According to user hanna-kruppe on the Rustlang forum,](https://users.rust-lang.org/t/split-owned-vec-t-without-reallocation/6346/2):
 
@@ -221,7 +213,7 @@ fn main() {
 
 ## `arrayvec`
 
-This crate will let you store a Vec inside of an array, but it won't let you exceed the size of the array. This means that the data can live in the data segment, on the stack, or on the heap.
+This crate will let you store a Vec inside of an array, but it won't let you exceed the length of the underlying array. This means that the data can live in the data segment, on the stack, or on the heap.
 
 [arrayvec](https://docs.rs/arrayvec)
 
