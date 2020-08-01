@@ -1,11 +1,16 @@
-# A Guide to Slice Data in Rust
+# A Guide to Contiguous Data in Rust
 
-This is an opinionated guide that tries to help you choose the best way to store slice data (I really mean contiguous data) in Rust. It covers tools from Rust's core and standard library as well as third-party crates that meet more specific needs.
+Contiguous data is when multiple pieces of data are stored next to each other in memory. Many languages use the terms "array," "slice," or "vector" for these types of data.
+
+This is an opinionated guide that tries to help you choose the best way to store contiguous data in Rust. It covers tools from Rust's core and standard library as well as third-party crates that meet more specific needs.
 
 # TODO
 
 - Would you ever want to use a boxed array (`Box<[T; N]>`)? See `WasmFile` from the `object` crate.
 - See https://users.rust-lang.org/t/when-is-it-morally-correct-to-use-smallvec/46375
+- Re-summarize tradeoffs
+- Check that each solution mentions all tradeoffs 
+- Add an "honorable mention"
 - Find more crates
 - https://lib.rs/crates/collect_slice
 - Mention https://crates.io/crates/slice-deque
@@ -15,11 +20,7 @@ This is an opinionated guide that tries to help you choose the best way to store
 
 # Tradeoffs
 
-These are things to think about when choosing a technique for storing slice data.
-
-## Lifetime
-
-You may want your data to have the `'static` lifetime so that it'll be available anywhere within your program. This provides a lot of flexibility in how and where you can use the data but less flexibility in how you can modify it.
+These are things to think about when choosing a technique for storing contiguous data.
 
 ## Mutability
 
@@ -39,7 +40,7 @@ When you run out of memory in your contiguous slice, should the data structure f
 
 ## Splitting
 
-There are several ways that you can split contiguous data in Rust. Reviewing [References and Borrowing](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) from TRPL might be helpful to understanding this better. Since any contiguous data can be turned into a slice, the slice splitting rules can be used. The `bytes` crate provides an interesting way to split owned data. 
+There are several ways that you can split contiguous data in Rust. Reviewing [References and Borrowing](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) from TRPL might be helpful to understanding this better. Since any contiguous data can be turned into a slice, the slice splitting rules generally apply for borrowed data. The `bytes` crate provides an interesting way to split owned data. 
 
 # Solutions
 
@@ -128,7 +129,7 @@ fn main() {
 }
 ```
 
-See also [TRPL on slice data](https://doc.rust-lang.org/book/ch04-03-slices.html).
+See also [TRPL on slices](https://doc.rust-lang.org/book/ch04-03-slices.html).
 
 ## Boxed slice: `Box<[T]>`
 
