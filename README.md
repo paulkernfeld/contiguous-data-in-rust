@@ -6,9 +6,6 @@ This is an opinionated guide that tries to help you choose the best way to store
 
 # TODO
 
-- See https://users.rust-lang.org/t/when-is-it-morally-correct-to-use-smallvec/46375
-- Re-summarize tradeoffs
-- Check that each solution mentions all tradeoffs 
 - Add an "honorable mention"
 - Find more crates
 - https://lib.rs/crates/collect_slice
@@ -29,17 +26,21 @@ There are a few broad levels of mutability for contiguous data in Rust:
 - Fixed length, mutable contents
 - Mutable length and contents
 
-# Allocation
+## Allocation
 
-Some solutions can use memory in the data segment of the binary, some solutions can use the memory of the stack, and some need to use memory allocated by an allocator.
-
-## Extend vs. refuse
-
-When you run out of memory in your contiguous slice, should the data structure figure out a way to get more memory or should it refuse to give you more memory? If you want to intentionally use a capped amount of memory, it might be better to refuse to extend the memory. This could be useful in embedded programming where you might not have access to an allocator to give you more memory.
+Some solutions can be used in `const`, where the data will live in the data segment of the binary, some solutions can use the memory of the stack, and some need to use memory allocated by an allocator (I'll call this "the heap" although I don't think that it technically has to be a heap).
 
 ## Splitting
 
 There are several ways that you can split contiguous data in Rust. Reviewing [References and Borrowing](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) from TRPL might be helpful to understanding this better. Since any contiguous data can be turned into a slice, the slice splitting rules generally apply for borrowed data. The `bytes` crate provides an interesting way to split owned data. 
+
+## Extend vs. refuse
+
+When you run out of memory in your contiguous data, should the data structure ask to allocate more memory or should it refuse to give you more memory? If you want to intentionally use a capped amount of memory, it might be better to refuse to extend the memory. This could be useful in embedded and/or real-time programming.
+
+## Types
+
+Most of the solutions below can store any type but there are a couple exceptions.
 
 # Solutions
 
@@ -49,7 +50,7 @@ The solutions are roughly in order of increasing power, according to the [Princi
 
 When you create a [fixed-size array](https://doc.rust-lang.org/std/primitive.array.html) in Rust, you must specify the size (`N`) at compile time.
 
-Given a mutable array, you can change the content, but there is no way to change the size.
+Given a mutable fixed-size array, you can change the content, but there is no way to change the size.
 
 ```rust
 const MY_DATA: [i8; 3] = [1, 2, 3];
@@ -62,7 +63,7 @@ fn main() {
 }
 ```
 
-Because the size is known at compile time, a fixed-size array can be stored anywhere, even to be used as a `const`. The size of the array is actually part of its type. This means that the following code, for example, won't compile because you can't compare two variables with different types:
+Because the size is known at compile time, a fixed-size array can be stored anywhere, even to be used as a `const`. The length of the array is actually part of its type. This means that the following code, for example, won't compile because you can't compare two variables with different types:
 
 ```
 const MY_DATA_3: [i8; 3] = [1, 2, 3];
@@ -213,6 +214,8 @@ fn main() {
 }
 ```
 
+See also [When is it “morally” correct to use smallvec?](https://users.rust-lang.org/t/when-is-it-morally-correct-to-use-smallvec/46375) from The Rust Programming Language Forum.
+
 ## `arrayvec`
 
 This crate will let you store a Vec inside of an array, but it won't let you exceed the length of the underlying array. This means that the data can live in the data segment, on the stack, or on the heap.
@@ -233,7 +236,7 @@ fn main() {
 
 # `tinyvec`
 
-`tinyvec` provides 100%-safe alternatives to both `arrayvec` and `smallvec`. It works pretty much the same way except that the types must implement `Default`. Note that it doesn't provide the exact same APIs
+`tinyvec` provides 100%-safe alternatives to both `arrayvec` and `smallvec`. It works pretty much the same way except that the types must implement `Default`. Note that it doesn't provide the exact same APIs.
 
 ```rust
 use tinyvec::ArrayVec;
@@ -279,7 +282,7 @@ Like a `Vec`, the `VecDeque` data lives on the heap.
 
 ## The `bytes` crate 
 
-[bytes](https://docs.rs/bytes) provides `Bytes`, "an efficient container for storing and operating on contiguous slices of memory." One of its signature features is that, unlike `Vec`, it allows you to split ownership of data without copying. Unlike the other tools in this guide, the `bytes` crate can't store types `T`.
+[bytes](https://docs.rs/bytes) provides `Bytes`, "an efficient container for storing and operating on contiguous slices of memory." One of its signature features is that, unlike `Vec`, it allows you to split ownership of data without copying. Unlike the other tools in this guide, the `bytes` crate can't store types `T`, it can only store `u8`.
 
 ```rust
 use bytes::{BytesMut, BufMut};
