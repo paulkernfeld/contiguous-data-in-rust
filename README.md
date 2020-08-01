@@ -6,7 +6,6 @@ This is an opinionated guide that tries to help you choose the best way to store
 
 # TODO
 
-- Would you ever want to use a boxed array (`Box<[T; N]>`)? See `WasmFile` from the `object` crate.
 - See https://users.rust-lang.org/t/when-is-it-morally-correct-to-use-smallvec/46375
 - Re-summarize tradeoffs
 - Check that each solution mentions all tradeoffs 
@@ -162,6 +161,8 @@ fn main() {
 ```
 
 Because the length isn't known at compile time, a boxed slice can _only_ be allocated with an allocator; it can't live on the stack.
+
+A boxed slice (`Box<[T]>`) is _not_ the same as a boxed array (`Box<[T; N]>`). You probably don't want to use a boxed array; among other things, it's easy to [cause a stack overflow](https://github.com/rust-lang/rust/issues/53827).
 
 ## `Vec`
 
