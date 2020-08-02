@@ -7,8 +7,6 @@ Contiguous data is when multiple pieces of data are stored next to each other in
 # TODO
 
 - Find more crates
-- https://lib.rs/crates/collect_slice
-- Mention https://crates.io/crates/slice-deque
 - Check out https://crates.io/crates/tendril
 - If you use a custom allocator, is that still "the heap?"
 - If a C FFI function gives you owned data, can you clean up the memory? `soruh_c10` says you'd need to `Box::leak` and then call a C destructor.
@@ -308,6 +306,7 @@ The data for the `bytes` data structures will live on the heap.
 These are a few techniques that are good to know about, but the use cases are pretty narrow or there are major drawbacks.
 
 - A boxed array (`Box<[T; N]>`) is _not_ the same as a boxed slice (`Box<[T]>`). You probably don't want to use a boxed array; among other things, there are a couple [major ergonomics drawbacks](https://users.rust-lang.org/t/when-would-you-want-to-use-a-boxed-array/46658/4) at the time of writing. See also [stack overflow](https://github.com/rust-lang/rust/issues/53827).
+- [Slice Deque](https://crates.io/crates/slice-deque) is a double-ended queue that uses operating system virtual memory trickery to let you see the entire contents of the queue as a slice.
 
 # More Resources
 
