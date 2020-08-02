@@ -4,12 +4,6 @@ This is an opinionated guide that tries to help you choose the best way to store
 
 Contiguous data is when multiple pieces of data are stored next to each other in memory. Many languages use the terms "array," "slice," or "vector" for these types of data. It is often a great way to store collections, because it can provide great cache locality and branch prediction.
 
-# TODO
-
-- Find more crates
-- If you use a custom allocator, is that still "the heap?"
-- If a C FFI function gives you owned data, can you clean up the memory? `soruh_c10` says you'd need to `Box::leak` and then call a C destructor.
-
 # Tradeoffs
 
 These are things to think about when choosing a technique for storing contiguous data.
@@ -24,7 +18,7 @@ There are a few broad levels of mutability for contiguous data in Rust:
 
 ## Allocation
 
-Some solutions can be used in `const`, where the data will live in the data segment of the binary, some solutions can use the memory of the stack, and some need to use memory allocated by an allocator (I'll call this "the heap" although I don't think that it technically has to be a heap).
+Some solutions can be used with `const`, where the data will live in the data segment of the binary (I think??), some solutions can use the memory of the stack, and some need to use memory allocated by an allocator (I'll call this "the heap" although I don't think that it technically has to be a heap).
 
 ## Splitting
 
@@ -59,7 +53,9 @@ fn main() {
 }
 ```
 
-Because the size is known at compile time, a fixed-size array can be stored anywhere, even to be used as a `const`. The length of the array is actually part of its type. This means that the following code, for example, won't compile because you can't compare two variables with different types:
+Because the size is known at compile time, a fixed-size array can be stored anywhere, even to be used as a `const`. However, it might not be a good idea to store large fixed-size arrays on the stack because it could cause a stack overflow.
+
+The length of the array is actually part of its type. This means that the following code, for example, won't compile because you can't compare two variables with different types:
 
 ```
 const MY_DATA_3: [i8; 3] = [1, 2, 3];
@@ -157,7 +153,7 @@ fn main() {
 }
 ```
 
-Because the length isn't known at compile time, a boxed slice can _only_ be allocated with an allocator; it can't live on the stack.
+Because the length isn't known at compile time, the data for a boxed slice can _only_ be allocated with an allocator. 
 
 ## `Vec`
 
