@@ -1,12 +1,11 @@
 # A Guide to Contiguous Data in Rust
 
-Contiguous data is when multiple pieces of data are stored next to each other in memory. Many languages use the terms "array," "slice," or "vector" for these types of data.
-
 This is an opinionated guide that tries to help you choose the best way to store contiguous data in Rust. It covers tools from Rust's core and standard library as well as third-party crates that meet more specific needs.
+
+Contiguous data is when multiple pieces of data are stored next to each other in memory. Many languages use the terms "array," "slice," or "vector" for these types of data. It is often a great way to store collections, because it can provide great cache locality and branch prediction.
 
 # TODO
 
-- Add an "honorable mention"
 - Find more crates
 - https://lib.rs/crates/collect_slice
 - Mention https://crates.io/crates/slice-deque
@@ -163,8 +162,6 @@ fn main() {
 
 Because the length isn't known at compile time, a boxed slice can _only_ be allocated with an allocator; it can't live on the stack.
 
-A boxed slice (`Box<[T]>`) is _not_ the same as a boxed array (`Box<[T; N]>`). You probably don't want to use a boxed array; among other things, it's easy to [cause a stack overflow](https://github.com/rust-lang/rust/issues/53827).
-
 ## `Vec`
 
 [`std::vec::Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html) is the `std` way to do variable-length contiguous data. When you try to add data and there's not enough room, the data structure will allocate more memory for the data.
@@ -305,6 +302,12 @@ fn main() {
 ```
 
 The data for the `bytes` data structures will live on the heap.
+
+## Honorable Mention
+
+These are a few techniques that are good to know about, but the use cases are pretty narrow or there are major drawbacks.
+
+- A boxed array (`Box<[T; N]>`) is _not_ the same as a boxed slice (`Box<[T]>`). You probably don't want to use a boxed array; among other things, there are a couple [major ergonomics drawbacks](https://users.rust-lang.org/t/when-would-you-want-to-use-a-boxed-array/46658/4) at the time of writing. See also [stack overflow](https://github.com/rust-lang/rust/issues/53827).
 
 # More Resources
 
