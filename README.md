@@ -303,6 +303,7 @@ These are a few techniques that are good to know about, but the use cases are pr
 - A boxed array (`Box<[T; N]>`) is _not_ the same as a boxed slice (`Box<[T]>`). You probably don't want to use a boxed array; among other things, there are a couple [major ergonomics drawbacks](https://users.rust-lang.org/t/when-would-you-want-to-use-a-boxed-array/46658/4) at the time of writing. See also [stack overflow](https://github.com/rust-lang/rust/issues/53827).
 - [Slice Deque](https://crates.io/crates/slice-deque) is a double-ended queue that uses operating system virtual memory trickery to let you see the entire contents of the queue as a slice.
 - [tendril](https://crates.io/crates/tendril) is a crate from the Servo org boasting really advanced features for zero-copy parsing.
+- [ndarray](https://crates.io/crates/ndarray) and [nalgebra](https://www.nalgebra.org/) for math-heavy and multidimensional arrays.
 
 # More Resources
 
