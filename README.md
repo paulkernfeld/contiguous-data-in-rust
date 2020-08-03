@@ -310,3 +310,7 @@ These are a few techniques that are good to know about, but the use cases are pr
 - [Smart Pointers](https://doc.rust-lang.org/book/ch15-00-smart-pointers.html) from _The Rust Programming Language_.
 - [Arrays and Slices](https://doc.rust-lang.org/stable/rust-by-example/primitives/array.html) from _Rust By Example_
 - [Slice types](https://doc.rust-lang.org/reference/types/slice.html) from The Rust Reference
+
+## Thanks
+
+Thanks to soruh_c10 on Twitch and s3bk and mejrs on users.rust-lang.org for suggestions and corrections!
