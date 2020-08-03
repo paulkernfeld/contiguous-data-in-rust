@@ -18,7 +18,7 @@ There are a few broad levels of mutability for contiguous data in Rust:
 
 ## Allocation
 
-Some solutions can be used with `const`, where the data will live in the data segment of the binary (I think??), some solutions can use the memory of the stack, and some need to use memory allocated by an allocator (I'll call this "the heap" although I don't think that it technically has to be a heap).
+Some solutions can be used with `const` and `static`, some solutions can use the memory of the stack, and some need to use memory allocated by an allocator (I'll call this "the heap" although I don't think that it technically has to be a heap).
 
 ## Splitting
 
@@ -96,7 +96,7 @@ fn main() {
 }
 ```
 
-A slice can refer to memory anywhere. It's possible to make a `const` slice that refers to data stored in the data segment of your program.
+A slice can refer to memory anywhere including as a `const`.
 
 You can always create as many overlapping shared slices (`&[T]`) as you want, although you can't mutate them:
 
