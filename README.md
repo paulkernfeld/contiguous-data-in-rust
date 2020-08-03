@@ -184,7 +184,7 @@ See also [Storing Lists of Values with Vectors](Storing Lists of Values with Vec
 
 The [`smallvec`](https://github.com/servo/rust-smallvec) provides an interface that is very close to Vec, but it will store small numbers of items on the stack instead of allocating on the heap. This is good if you suspect your data structure will normally be quite small but it may need to grow occasionally.
 
-Whereas an array with type `[T; 4]` stores exactly 4 elements, a `SmallVec` of type `SmallVec[T; 4]` can store more than 4 elements, but only the first 4 elements will be stored on the stack.
+Whereas an array with type `[T; 4]` stores exactly 4 elements, a `SmallVec` of type `SmallVec[T; 4]` can store more than 4 elements. If it has 4 or fewer elements, it will be stored on the stack; otherwise, it will be stored on the heap.
 
 ```rust
 use smallvec::{SmallVec, smallvec};
