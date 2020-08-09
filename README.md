@@ -1,8 +1,8 @@
 # A Guide to Contiguous Data in Rust
 
-This is an opinionated guide that tries to help you choose the best way to store contiguous data in Rust. It covers tools from Rust's core and standard library as well as third-party crates that meet more specific needs.
+Many modern languages have collections called "array," "slice," or "vector." Rust has all three, plus many third-party libraries! This is an opinionated guide that tries to help you choose the best way to store contiguous data in Rust. It covers tools from Rust's core and standard library as well as third-party crates that meet more specific needs.
 
-Contiguous data is when multiple pieces of data are stored next to each other in memory. Many languages use the terms "array," "slice," or "vector" for these types of data. It is often a great way to store collections, because it can provide great cache locality and branch prediction.
+Contiguous data is when multiple pieces of data are stored next to each other in memory.  It is often a great way to store collections, because it can provide great cache locality and branch prediction.
 
 # Tradeoffs
 
